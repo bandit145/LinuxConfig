@@ -16,9 +16,6 @@ class Config{
         if(Test-Path $this.FileName){
             $this.RawFileContent = Get-Content -Path $this.FileName
         }
-        else{
-            throw -join($this.FileName, " Either does not exist or is not accessible")
-        }
     }
     
     #Overload this in specific classes
