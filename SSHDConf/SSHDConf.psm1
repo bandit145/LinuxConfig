@@ -60,7 +60,7 @@ class SSHDConf : Config{
     #ytho
     #can match User, Group, Host, Address
     #@(@{MatchType = "User"; Match })
-    [Match[]]$Match
+    [Match[]]$Matches
     [ValidateSet("yes","no")]$X11Forwarding = "no"
     [int]$X11DisplayOffset = 10
     [ValidateSet("yes","no")]$X11UseLocalHost = "yes"
@@ -96,8 +96,9 @@ class SSHDConf : Config{
             if(($key -eq "HostKey") -or ($key -eq "AcceptEnv")){
                 $this.$key += $value
             }
+            #not currently working
             #OH MY GOD ITS NESTED IM GOING TO DIE
-            elseif(($key -eq "Match"){
+            elseif($key -eq "Match"){
                 $match = [Match]::new()
                 $match.Match = $line.Split()
                 $curline = [array]::IndexOf($this.RawFileContent,$line)
@@ -106,8 +107,10 @@ class SSHDConf : Config{
                     if($tab -eq "`t"){
                         $match.$data[0] = $data[1]
                     }
+                    else{
+                        break
+                    }
                 }
-
             }
             elseif(($key -eq "Ciphers") -or ($key -eq "MACs")){
                 #ciphers is a comma delimted list
@@ -146,9 +149,14 @@ class SSHDConf : Config{
                 if($this.$key -is "System.String[]"){
                     $buffer = ""
                     foreach($entry in $this.$key){
-                        $buffer += -join($entry," ")
-
+                        if(($key -eq "Chiphers") -or ($key -eq "MACs")){
+                          $buffer += -join($entry,",")  
+                        }
+                        else{
+                            $buffer += -join($entry," ")
+                        }
                     }
+
                     $outfile += -join($key, " ", $buffer, "`n")
                 }
                 #Handle as standard key value

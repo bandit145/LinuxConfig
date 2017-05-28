@@ -1,5 +1,5 @@
-using module ./Configs/SSHDConf.psm1
-
+using module ./Config
+using module ./SSHDConf
 #Parses config from a file
 Function Get-Config{
     <#
@@ -56,20 +56,25 @@ Function Set-Config{
         Set-Config writes out the provided Config object to a file
         Using -NoClobber sets the pre-existing file (if it exits) to "Filename".bak 
         .EXAMPLE
-        1: Set-Config -InputObject $sshd_config
-        2: ForEach-Object -InputObject $array_of_sshd_configs | Set-Config
-        3: Set-Config -InputObject $sshd_config -NoClobber
+        1: Set-Config -Config $sshd_config
+        2: ForEach-Object -Config $array_of_sshd_configs | Set-Config
+        3: Set-Config -Config $sshd_config -NoClobber
         .LINK
     #>
     [CmdletBinding()]
     param(
         [parameter(Mandatory=$true,ValueFromPipeline=$true,position=0)]
-        [Config]$InputObject,
+        [Config]$Config,
         [parameter()]
         [Switch]$NoClobber
     )
-    $ErrorActionPreference = "Stop"
+    Begin{
+
+    }
     Process{
-        $InputObject.WriteConfigFile($NoClobber)
+      $_.WriteConfigFile($NoClobber)  
+    }
+    End{
+
     }
 }
