@@ -178,7 +178,8 @@ class SSHDConf : Config{
             $buffer = ""
             foreach($entry in $value){
                 if(($key -eq "Chiphers") -or ($key -eq "MACs")){
-                    if($key.IndexOf($key) -eq $key.Length){
+                    #Oh god forgive me
+                    if($value.IndexOf($entry) -eq ($value.Length - 1)){
                         $buffer += -join($entry)  
                     }
                     else{
