@@ -177,7 +177,7 @@ class SSHDConf : Config{
         if ($key.Length -ge 1){
             $buffer = ""
             foreach($entry in $value){
-                if(($key -eq "Chiphers") -or ($key -eq "MACs")){
+                if(($key -eq "Chiphers") -or ($key -eq "MACs") -or ($key -eq "Protocol") -or ($key -eq "RequiredAuthentications1") -or ($key -eq "RequiredAuthentications2")){
                     #Oh god forgive me
                     if($value.IndexOf($entry) -eq ($value.Length - 1)){
                         $buffer += -join($entry)  

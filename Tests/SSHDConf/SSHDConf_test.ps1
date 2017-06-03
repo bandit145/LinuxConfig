@@ -76,5 +76,5 @@ Describe "Test SSHDConf out"{
         $SSHDConf.HostKey[1] | Should Be("test2")
         $SSHDConf.HostKey[2] | Should Be("test3")
       }
-    #Remove-Item -Path "$PSScriptRoot/sshd_config_new","$PSScriptRoot/sshd_config_new.bak"
+    Remove-Item -Path "$PSScriptRoot/sshd_config_new","$PSScriptRoot/sshd_config_new.bak"
 }
