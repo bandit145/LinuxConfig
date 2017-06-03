@@ -1,6 +1,5 @@
 using module ./Config
 
-
 class SSHDConf : Config{
     #Keys in config file
     #Source: man sshd_config
@@ -89,6 +88,7 @@ class SSHDConf : Config{
         
     }
 
+
     ParseConfigFile(){
         $ErrorActionPreference = "Stop"
         foreach($line in $this.RawFileContent){
@@ -114,9 +114,10 @@ class SSHDConf : Config{
             }
             elseif(($key -eq "Ciphers") -or ($key -eq "MACs")){
                 #ciphers is a comma delimted list
-                $key, $value = $line.Split(",")
+                $key, $value = $line.Split()
+                $value = $value.Split(",")
                 foreach($data in $value){
-                    $this.$key += $value
+                    $this.$key += $data
                 }
             }
             elseif(!($key -match "^#") -and ($key.Length -gt 0)){
@@ -129,14 +130,17 @@ class SSHDConf : Config{
         $ErrorActionPreference = "Stop"
         $outfile = ""
         #Get all property members
-        $members =  Get-Member -InputObject $this -MemberType Properties | Where-Object {$_.Name -ne "FileName"}
-        foreach($key in $members.Name){
+        [System.Collections.ArrayList] $members = (Get-Member -InputObject $this -MemberType Properties | Where-Object {$_.Name -ne "FileName"}).Name
+        #Denyusers, AllowUsers,DenyGroups, AllowGroups, need to be in this order
+        #Then remove from arraylist so it doesn't get written twice
+        foreach($key in @("DenyUsers","AllowUsers","DenyGroups","AllowGroups")){
+            $outfile += $this.write_groups($this.$key, $key)
+            $members.Remove($key)
+        }
+        foreach($key in $members){
             #if nothing set then set as comment
             if ($this.$key.Length -lt 1){
                 $outfile += "#$key`n"
-            }
-            elseif($key -eq "Match"){
-
             }
             #if hostkey then set as one value with mutiple keys of same name
             elseif(($key -eq "HostKey") -or ($key -eq "AcceptEnv")){
@@ -146,23 +150,17 @@ class SSHDConf : Config{
             }
             #if array of strings unfurl onto one line
             else{
-                if($this.$key -is "System.String[]"){
-                    $buffer = ""
-                    foreach($entry in $this.$key){
-                        if(($key -eq "Chiphers") -or ($key -eq "MACs")){
-                          $buffer += -join($entry,",")  
-                        }
-                        else{
-                            $buffer += -join($entry," ")
-                        }
-                    }
-
-                    $outfile += -join($key, " ", $buffer, "`n")
+                if($this.$key -is "System.Array"){
+                    $outfile += $this.write_groups($this.$key, $key)
                 }
                 #Handle as standard key value
                 else{
                     $outfile += -join($key," ", $this.$key, "`n")
                 }
+            }
+            #Write out matches at end for consistency 
+            if($this.Matches.Length -gt 0){
+
             }
         
         }
@@ -172,8 +170,35 @@ class SSHDConf : Config{
                 }
             }
             Out-File -InputObject $outfile -FilePath $this.FileName
+    }
+
+    #Groups delmited by space
+   hidden [String] write_groups([System.Array]$value, [String]$key){
+        if ($key.Length -ge 1){
+            $buffer = ""
+            foreach($entry in $value){
+                if(($key -eq "Chiphers") -or ($key -eq "MACs")){
+                    if($key.IndexOf($key) -eq $key.Length){
+                        $buffer += -join($entry)  
+                    }
+                    else{
+                        $buffer += -join($entry,",")
+                    }
+                }
+                else{
+                    $buffer += -join($entry," ")
+                }
+            }
+            return -join($key, " ", $buffer, "`n")
         }
+        else{
+            return "#$key`n"
+        }
+    }
 }
+
+
+
 
 class Match{
     #Only a subset of keywords are allowed in a match to overide global config

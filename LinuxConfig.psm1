@@ -72,7 +72,12 @@ Function Set-Config{
 
     }
     Process{
-      $_.WriteConfigFile($NoClobber)  
+        if($_){
+            $_.WriteConfigFile($NoClobber)
+        }
+        else{
+            $Config.WriteConfigFile($NoClobber)
+        }
     }
     End{
 
